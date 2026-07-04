@@ -1,0 +1,16 @@
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.34,<1.0
+pydantic>=2.0,<3.0
+python-dotenv>=1.0,<2.0
+jinja2>=3.1,<4.0
+
+# Gemini access via free Google AI Studio API key (no GCP billing required)
+google-adk
+google-genai
+
+# Optional persistent audit log — app falls back to local JSON if unset
+supabase
+
+# Testing
+pytest>=8.0,<9.0
+httpx>=0.27,<1.0

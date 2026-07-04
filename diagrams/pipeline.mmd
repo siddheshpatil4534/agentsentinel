@@ -1,0 +1,13 @@
+%% Render at https://mermaid.live or via the Mermaid VS Code extension
+flowchart TD
+    A[Business AI Agent] --> B[Traffic Agent]
+    B --> C[Threat Detection Agent]
+    C --> D[Risk Scoring Agent]
+    D --> E[Policy Gate Agent]
+    E -->|0-30 ALLOW / 71-100 BLOCK| F[Execute / Reject]
+    E -->|31-70 HUMAN_APPROVAL| G[Human Approval Agent]
+    G --> F
+    F --> H[Audit Agent]
+
+    style E fill:#1A222D,stroke:#4FB7E8,color:#E8EEF4
+    style H fill:#1A222D,stroke:#7E8C9A,color:#E8EEF4
