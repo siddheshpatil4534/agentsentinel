@@ -1,28 +1,8 @@
 """
 Audit Agent
 -----------
-Last stop in the pipeline. Persists every decision -- ALLOW, BLOCK, or
-HUMAN_APPROVAL plus its eventual resolution -- with enough detail to
-reconstruct why the system did what it did.
-
-Writes to Supabase's `audit_log` table if SUPABASE_URL/SUPABASE_KEY are
-configured; otherwise falls back to a local JSON file so the demo still works
-with zero external accounts set up.
-
-Suggested Supabase schema:
-
-    create table audit_log (
-        request_id   text primary key,
-        user_id      text,
-        tool         text,
-        text         text,
-        threats      text[],
-        risk_score   int,
-        decision     text,
-        reason       text,
-        timestamp    timestamptz,
-        resolved_by  text
-    );
+Persists every decision to Supabase if configured, otherwise falls back
+to a local JSON file.
 """
 
 from __future__ import annotations
@@ -46,16 +26,29 @@ class AuditAgent:
         client = get_supabase_client()
         if client is not None:
             try:
-                client.table("audit_logs").upsert(
-                    json.loads(record.model_dump_json())
-                ).execute()
-                return
-            except Exception:
-                pass  # fall through to local log on any Supabase error
+                payload = json.loads(record.model_dump_json())
 
+                print("\n===== Saving record to Supabase =====")
+                print(payload)
+
+                client.table("audit_logs").upsert(payload).execute()
+
+                print("===== Saved to Supabase successfully! =====\n")
+                return
+
+            except Exception as e:
+                print("\n===== Supabase insert failed =====")
+                print(e)
+                print("===================================\n")
+
+        # fallback
         self._append_local(record)
 
-    def update_resolution(self, request_id: str, resolved_by: str) -> None:
+    def update_resolution(
+        self,
+        request_id: str,
+        resolved_by: str,
+    ) -> None:
         for record in self._memory:
             if record.request_id == request_id:
                 record.resolved_by = resolved_by
@@ -67,9 +60,16 @@ class AuditAgent:
                 client.table("audit_logs").update(
                     {"resolved_by": resolved_by}
                 ).eq("request_id", request_id).execute()
+
+                print(
+                    f"Updated resolution for {request_id} in Supabase."
+                )
                 return
-            except Exception:
-                pass
+
+            except Exception as e:
+                print("\n===== Supabase update failed =====")
+                print(e)
+                print("==================================\n")
 
         self._rewrite_local()
 
@@ -78,7 +78,7 @@ class AuditAgent:
             return self._memory
         return self._read_local()
 
-    # -- local JSON fallback -------------------------------------------------
+    # ---------- local JSON fallback ----------
 
     def _append_local(self, record: AuditRecord) -> None:
         records = self._read_local()
@@ -91,10 +91,14 @@ class AuditAgent:
     def _read_local(self) -> list[AuditRecord]:
         if not LOCAL_LOG_PATH.exists():
             return []
+
         raw = json.loads(LOCAL_LOG_PATH.read_text())
         return [AuditRecord(**r) for r in raw]
 
     def _write_local(self, records: list[AuditRecord]) -> None:
         LOCAL_LOG_PATH.write_text(
-            json.dumps([json.loads(r.model_dump_json()) for r in records], indent=2)
+            json.dumps(
+                [json.loads(r.model_dump_json()) for r in records],
+                indent=2,
+            )
         )
