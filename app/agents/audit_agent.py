@@ -46,7 +46,7 @@ class AuditAgent:
         client = get_supabase_client()
         if client is not None:
             try:
-                client.table("audit_log").upsert(
+                client.table("audit_logs").upsert(
                     json.loads(record.model_dump_json())
                 ).execute()
                 return
@@ -64,7 +64,7 @@ class AuditAgent:
         client = get_supabase_client()
         if client is not None:
             try:
-                client.table("audit_log").update(
+                client.table("audit_logs").update(
                     {"resolved_by": resolved_by}
                 ).eq("request_id", request_id).execute()
                 return

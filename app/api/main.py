@@ -122,3 +122,8 @@ def run_benchmark(
 def benchmark_history():
     history = BenchmarkHistory()
     return history.load()
+from app.services.integration_status import get_all_statuses
+
+@app.get("/integrations/status")
+def integrations_status():
+    return get_all_statuses()

@@ -653,6 +653,18 @@ async function downloadBenchmarkHistory() {
   }
 }
 
+fetch("/integrations/status")
+  .then(res => res.json())
+  .then(data => {
+    const map = { github: "status-github", supabase: "status-supabase", slack: "status-slack" };
+    Object.entries(map).forEach(([key, id]) => {
+      const el = document.getElementById(id);
+      el.textContent = data[key] ? "Connected" : "Not Connected";
+      el.style.color = data[key] ? "var(--allow)" : "var(--block)";
+    });
+  })
+  .catch(() => {});
+
 refreshLog();
 </script>
 </body>
