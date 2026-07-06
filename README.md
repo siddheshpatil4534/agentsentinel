@@ -1,9 +1,11 @@
 ---
-title: AgentSentinel🛡️
+title: AgentSentinel
+emoji: 🛡️
 colorFrom: blue
 colorTo: red
 license: mit
 short_description: Multi-agent security & governance gateway for AI agents
+---
 
 # AgentSentinel
 
