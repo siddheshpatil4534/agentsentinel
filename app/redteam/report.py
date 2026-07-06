@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+from app.services.supabase_client import get_supabase_client
+
 
 class RedTeamReport:
     def __init__(self, results):
@@ -90,5 +92,22 @@ class RedTeamReport:
         Path(filename).write_text(
             json.dumps(report, indent=4)
         )
+
+        client = get_supabase_client()
+
+        if client:
+            try:
+                client.table("redteam_results").insert({
+                    "attack_name": "Red Team Evaluation",
+                    "payload": f"{report['detected_attacks']}/{report['total_attacks']} attacks detected",
+                    "success": report["security_score"] == 100,
+                    "score": report["security_score"],
+                    "recommendation": "\n".join(report["recommendations"])
+                }).execute()
+
+                print("Saved Red Team results to Supabase!")
+
+            except Exception as e:
+                print("Failed to save Red Team results:", e)
 
         return filename
